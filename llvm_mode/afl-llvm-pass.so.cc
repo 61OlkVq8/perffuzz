@@ -143,6 +143,19 @@ bool AFLCoverage::runOnModule(Module &M) {
       BasicBlock::iterator IP = BB.getFirstInsertionPt();
       IRBuilder<> IRB(&(*IP));
 
+      size_t instCnt = 0;
+      for (auto &Inst : BB) {
+          instCnt++;
+      }
+
+      // if (instCnt < 1024) {
+      //     ACTF("instCnt less than 1024 (%zu), round up to 1", instCnt);
+      // } else {
+      //     ACTF("instCnt larger than 1024 (%zu), divide it by 1024 as %zu", instCnt, instCnt >> 10);
+      // }
+
+      // instCnt = (instCnt > 1024) ? (instCnt >> 10) : 1;
+
       if (AFL_R(100) >= inst_ratio) continue;
 
       /* Make up cur_loc */
@@ -187,14 +200,14 @@ bool AFLCoverage::runOnModule(Module &M) {
       /* Increment performance counter for branch */
       LoadInst *PerfBranchCounter = IRB.CreateLoad(PerfBranchPtr);
       PerfBranchCounter->setMetadata(M.getMDKindID("nosanitize"), MDNode::get(C, None));
-      Value *PerfBranchIncr = IRB.CreateAdd(PerfBranchCounter, ConstantInt::get(Int32Ty, 1));
+      Value *PerfBranchIncr = IRB.CreateAdd(PerfBranchCounter, ConstantInt::get(Int32Ty, instCnt));
       IRB.CreateStore(PerfBranchIncr, PerfBranchPtr)
           ->setMetadata(M.getMDKindID("nosanitize"), MDNode::get(C, None));
       
       /* Increment performance counter for total count  */
       LoadInst *PerfTotalCounter = IRB.CreateLoad(PerfPtr); // Index 0 of the perf map
       PerfTotalCounter->setMetadata(M.getMDKindID("nosanitize"), MDNode::get(C, None));
-      Value *PerfTotalIncr = IRB.CreateAdd(PerfTotalCounter, ConstantInt::get(Int32Ty, 1));
+      Value *PerfTotalIncr = IRB.CreateAdd(PerfTotalCounter, ConstantInt::get(Int32Ty, instCnt));
       IRB.CreateStore(PerfTotalIncr, PerfPtr)
           ->setMetadata(M.getMDKindID("nosanitize"), MDNode::get(C, None));
 

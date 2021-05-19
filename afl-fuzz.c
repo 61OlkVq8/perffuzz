@@ -1292,24 +1292,27 @@ static void update_bitmap_score(struct queue_entry* q) {
   /* For every byte set in trace(or perf)_bits[], see if there is a previous winner,
      and how it compares to us. */
 
-  if (max_ct_fuzzing){
+  if (max_ct_fuzzing) {
 
-   /* in the case of max fuzzing, just win if we achieve the max */ 
-   for (i = 0; i < PERF_SIZE; i++)
+      /* in the case of max fuzzing, just win if we achieve the max */ 
+      for (i = 0; i < PERF_SIZE; i++)
 
-      if (perf_bits[i]) {
-         
-         if (top_rated[i]) {
-           if (perf_bits[i] < max_counts[i]) continue;
-         }
+          if (perf_bits[i]) {
+              // If a BB has less than 128 more instructions executed 
+              // it can be ignored
+              perf_bits[i] = perf_bits[i] >> 7;
 
-         /* Insert ourselves as the new winner. */
-         top_rated[i] = q;
+              if (top_rated[i]) {
+                  if (perf_bits[i] < max_counts[i]) continue;
+              }
 
-        /* if we get here, we know that perf_bits[i] == max_counts[i] */
-         score_changed = 1;
+              /* Insert ourselves as the new winner. */
+              top_rated[i] = q;
 
-       }
+              /* if we get here, we know that perf_bits[i] == max_counts[i] */
+              score_changed = 1;
+
+          }
 
   } else {
 
