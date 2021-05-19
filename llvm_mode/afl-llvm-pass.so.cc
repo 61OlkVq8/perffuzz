@@ -143,6 +143,13 @@ bool AFLCoverage::runOnModule(Module &M) {
       BasicBlock::iterator IP = BB.getFirstInsertionPt();
       IRBuilder<> IRB(&(*IP));
 
+      size_t instCnt = 0;
+      for (auto &Inst : BB) {
+          if (Inst.mayReadOrWriteMemory())
+              instCnt++;
+      }
+      if (instCnt == 0) continue;
+
       if (AFL_R(100) >= inst_ratio) continue;
 
       /* Make up cur_loc */
